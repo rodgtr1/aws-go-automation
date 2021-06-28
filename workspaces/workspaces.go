@@ -1,6 +1,7 @@
-package main
+package workspaces
 
 import (
+	"aws-go-automations/utils"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -10,12 +11,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
-func getAllWorkspaces(svc *workspaces.WorkSpaces) {
-	deleteFile("json-outputs/all-workspaces.json")
+func GetAllWorkspaces(svc *workspaces.WorkSpaces) {
+	utils.DeleteFile("json-outputs/all-workspaces.json")
 
 	err := svc.DescribeWorkspacesPages(nil,
 		func(page *workspaces.DescribeWorkspacesOutput, lastPage bool) bool {
-			writeWorkspacesJsonToFile(page)
+			for _, w := range page.Workspaces {
+				fmt.Printf("Username: %s\nState: %s\nWorkspaceId: %s\nComputerName: %s\n-----------------\n", *w.UserName, *w.State, *w.WorkspaceId, *w.ComputerName)
+			}
+			//writeWorkspacesJsonToFile(page)
 			return !lastPage
 		})
 	if err != nil {
@@ -23,7 +27,7 @@ func getAllWorkspaces(svc *workspaces.WorkSpaces) {
 	}
 }
 
-func getWorkspaceById(svc *workspaces.WorkSpaces, workspaceIds []string) {
+func GetWorkspaceById(svc *workspaces.WorkSpaces, workspaceIds []string) {
 
 	params := &workspaces.DescribeWorkspacesInput{
 		WorkspaceIds: aws.StringSlice(workspaceIds),
@@ -33,7 +37,9 @@ func getWorkspaceById(svc *workspaces.WorkSpaces, workspaceIds []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(ws)
+	for _, w := range ws.Workspaces {
+		fmt.Printf("Username: %s\nState: %s\nWorkspaceId: %s\nComputerName: %s\n-----------------\n", *w.UserName, *w.State, *w.WorkspaceId, *w.ComputerName)
+	}
 }
 
 func writeWorkspacesJsonToFile(result *workspaces.DescribeWorkspacesOutput) {

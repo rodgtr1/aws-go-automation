@@ -1,11 +1,11 @@
-package main
+package utils
 
 import (
 	"log"
 	"os"
 )
 
-func deleteFile(pathToFile string) {
+func DeleteFile(pathToFile string) {
 	if _, err := os.Stat(pathToFile); os.IsNotExist(err) {
 		return
 	}
@@ -15,7 +15,7 @@ func deleteFile(pathToFile string) {
 	}
 }
 
-func fileExists(filepath string) bool {
+func FileExists(filepath string) bool {
 	_, err := os.Stat(filepath)
 	if os.IsNotExist(err) {
 		return false

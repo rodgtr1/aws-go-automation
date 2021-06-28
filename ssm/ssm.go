@@ -1,6 +1,7 @@
-package main
+package systems
 
 import (
+	"aws-automations/utils"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,8 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 )
 
-func getAllManagedInstances(svc *ssm.SSM) {
-	deleteFile("json-outputs/all-managed-instances.json")
+func GetAllManagedInstances(svc *ssm.SSM) {
+	utils.DeleteFile("json-outputs/all-managed-instances.json")
 	pageNum := 0
 	err := svc.DescribeInstanceInformationPages(nil,
 		func(page *ssm.DescribeInstanceInformationOutput, lastPage bool) bool {

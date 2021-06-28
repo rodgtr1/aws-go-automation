@@ -1,10 +1,17 @@
 package main
 
 import (
+	servers "aws-go-automations/ec2"
+	users "aws-go-automations/iam"
+	systems "aws-go-automations/ssm"
+	ws "aws-go-automations/workspaces"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -20,19 +27,19 @@ func main() {
 	}
 
 	// ------ IAM
-	// svcIAM := iam.New(sess)
-	// getAllUsers(svcIAM)
+	svcIAM := iam.New(sess)
+	users.GetAllUsers(svcIAM)
 
 	// ------ Workspaces
 	svcWS := workspaces.New(sess)
-	getAllWorkspaces(svcWS)
-	// getWorkspaceById(svcWS, []string{"workspaceID1", "workspaceID2", "workspaceID3"})
+	ws.GetAllWorkspaces(svcWS)
+	ws.GetWorkspaceById(svcWS, []string{"workspaceID1", "workspaceID2", "workspaceID3"})
 
 	// ------ SSM
-	// svcSSM := ssm.New(sess)
-	// getAllManagedInstances(svcSSM)
+	svcSSM := ssm.New(sess)
+	systems.GetAllManagedInstances(svcSSM)
 
 	// ------EC2
-	// svcEC2 := ec2.New(sess)
-	// getAllInstances(svcEC2)
+	svcEC2 := ec2.New(sess)
+	servers.GetAllInstances(svcEC2)
 }

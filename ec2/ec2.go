@@ -1,6 +1,7 @@
-package main
+package servers
 
 import (
+	"aws-go-automations/utils"
 	"encoding/json"
 	"log"
 	"os"
@@ -8,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
-func getAllInstances(svc *ec2.EC2) {
-	deleteFile("json-outputs/all-ec2-instances.json")
+func GetAllInstances(svc *ec2.EC2) {
+	utils.DeleteFile("outputs/ec2/all-ec2-instances.json")
 	err := svc.DescribeInstancesPages(nil,
 		func(page *ec2.DescribeInstancesOutput, lastPage bool) bool {
 			writeInstancesJsonToFile(page)
@@ -22,7 +23,7 @@ func getAllInstances(svc *ec2.EC2) {
 
 func writeInstancesJsonToFile(result *ec2.DescribeInstancesOutput) {
 
-	f, err := os.OpenFile("json-outputs/all-ec2-instances.json", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile("outputs/ec2/all-ec2-instances.json", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
