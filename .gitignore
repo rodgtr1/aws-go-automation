@@ -1,4 +1,4 @@
 .env
 *.json
 *.csv
-!sample.json
+!placeholder.json

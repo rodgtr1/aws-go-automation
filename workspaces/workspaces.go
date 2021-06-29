@@ -2,8 +2,7 @@ package workspaces
 
 import (
 	"aws-go-automations/utils"
-	"encoding/json"
-	"fmt"
+	"encoding/csv"
 	"log"
 	"os"
 
@@ -11,15 +10,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
+var writeHeaders bool = true
+
 func GetAllWorkspaces(svc *workspaces.WorkSpaces) {
-	utils.DeleteFile("json-outputs/all-workspaces.json")
+
+	utils.DeleteFile("outputs/workspaces/all-workspaces.csv")
+
+	headers := []string{"workspaceid", "username", "state", "computername"}
 
 	err := svc.DescribeWorkspacesPages(nil,
 		func(page *workspaces.DescribeWorkspacesOutput, lastPage bool) bool {
-			for _, w := range page.Workspaces {
-				fmt.Printf("Username: %s\nState: %s\nWorkspaceId: %s\nComputerName: %s\n-----------------\n", *w.UserName, *w.State, *w.WorkspaceId, *w.ComputerName)
-			}
-			//writeWorkspacesJsonToFile(page)
+			writeWorkspacesToCsv(page, headers, writeHeaders, "all-workspaces")
+			writeHeaders = false
 			return !lastPage
 		})
 	if err != nil {
@@ -29,6 +31,10 @@ func GetAllWorkspaces(svc *workspaces.WorkSpaces) {
 
 func GetWorkspaceById(svc *workspaces.WorkSpaces, workspaceIds []string) {
 
+	utils.DeleteFile("outputs/workspaces/workspaces.csv")
+
+	headers := []string{"workspaceid", "username", "state", "computername"}
+
 	params := &workspaces.DescribeWorkspacesInput{
 		WorkspaceIds: aws.StringSlice(workspaceIds),
 	}
@@ -37,23 +43,37 @@ func GetWorkspaceById(svc *workspaces.WorkSpaces, workspaceIds []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, w := range ws.Workspaces {
-		fmt.Printf("Username: %s\nState: %s\nWorkspaceId: %s\nComputerName: %s\n-----------------\n", *w.UserName, *w.State, *w.WorkspaceId, *w.ComputerName)
-	}
+	writeWorkspacesToCsv(ws, headers, writeHeaders, "workspaces")
 }
 
-func writeWorkspacesJsonToFile(result *workspaces.DescribeWorkspacesOutput) {
+func writeWorkspacesToCsv(result *workspaces.DescribeWorkspacesOutput, headers []string, writeHeaders bool, csvName string) {
 
-	f, err := os.OpenFile("json-outputs/all-workspaces.json", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	wsData := [][]string{}
+	csvFile, err := os.OpenFile("outputs/workspaces/"+csvName+".csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed creating file: %s", err)
 	}
 
-	enc := json.NewEncoder(f)
-	enc.SetIndent("", "    ")
-	enc.Encode(result.Workspaces)
+	csvwriter := csv.NewWriter(csvFile)
 
-	if err := f.Close(); err != nil {
-		log.Fatal(err)
+	if writeHeaders {
+		err = csvwriter.Write(headers)
 	}
+
+	if err != nil {
+		log.Fatalf("Failed adding headers: %s", err)
+	}
+
+	for _, workspace := range result.Workspaces {
+		wsData = append(wsData, []string{*workspace.WorkspaceId, *workspace.UserName, *workspace.State, *workspace.ComputerName})
+	}
+
+	for _, wrRow := range wsData {
+		_ = csvwriter.Write(wrRow)
+	}
+
+	csvwriter.Flush()
+	csvFile.Close()
+
 }
