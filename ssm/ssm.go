@@ -52,6 +52,25 @@ func GetManagedInstancesById(svc *ssm.SSM, instanceIds []string) {
 	writeSSMInstancesToCsv(ws, headers, writeHeaders, "managed-instances")
 }
 
+func DeregisterInstance(svc *ssm.SSM, managedInstanceId string) {
+	fmt.Println(managedInstanceId)
+	if managedInstanceId == "" {
+		fmt.Println("Please provide an instance ID")
+		os.Exit(1)
+	}
+	params := &ssm.DeregisterManagedInstanceInput{
+		InstanceId: aws.String(managedInstanceId),
+	}
+	_, err := svc.DeregisterManagedInstance(params)
+
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		fmt.Printf("%s has been deregistered", managedInstanceId)
+	}
+
+}
+
 func writeSSMInstancesToCsv(result *ssm.DescribeInstanceInformationOutput, headers []string, writeHeaders bool, csvName string) {
 
 	wsData := [][]string{}
